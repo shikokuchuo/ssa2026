@@ -1,0 +1,438 @@
+/*-- scss:defaults --*/
+
+// The Posit brand (_brand/_brand.yml, from posit-dev/posit-brand) owns the
+// palette, fonts (Open Sans 300/400/700 + Source Code Pro), and heading,
+// body, and link styling — Quarto layers it underneath this file
+// automatically. Below are only this deck's own choices. Hex values mirror
+// _brand.yml (its $brand-* Sass variables are not visible to theme files).
+
+// Inline code accent (the brand sets the code font, not a color).
+$code-color: #9a4665; // brand burgundy
+
+// Code font fallback chain. The brand sets the family but no fallbacks, and
+// its local @font-face files 404 in revealjs output (quarto-dev/quarto-cli#14284),
+// leaving the bunny.net CDN import as the only source. With a bare family
+// name, any webfont failure (offline presenting, blocked CDN) drops code to
+// the browser default serif — keep the monospace chain so it degrades gracefully.
+$font-family-monospace: "Source Code Pro", "SF Mono", Menlo, Consolas, monospace;
+
+// Same fragility applies to body/heading text. The brand emits --r-main-font
+// and --r-heading-font as bare "Open Sans" (this scss var is not picked up by
+// the reveal template); the chain is applied to those CSS vars in rules below.
+$font-family-sans-serif: "Open Sans", Arial, -apple-system, "Segoe UI",
+  Helvetica, sans-serif;
+
+// Deck density: the brand deliberately sets no root size, and the scenes
+// are tuned to these metrics.
+$presentation-font-size-root: 44px;
+$presentation-line-height: 1.45;
+
+$presentation-h1-font-size: 1.55em;
+$presentation-h2-font-size: 1.2em;
+
+$code-block-bg: #f3f6f8; // brand off-white
+$code-block-border-color: #f3f6f8;
+$code-block-font-size: 0.6em;
+
+/*-- scss:rules --*/
+
+// Expose the brand palette + semantic diagram roles as CSS custom
+// properties so inline SVG scenes stay themed and consistent. The posit-*
+// colors reference the brand's own --brand-* properties, so they track
+// _brand.yml exactly.
+:root {
+  --posit-blue: var(--brand-blue);
+  --posit-gray: var(--brand-gray);
+  --posit-orange: var(--brand-orange);
+  --posit-teal: var(--brand-teal);
+  --posit-green: var(--brand-green);
+  --posit-burgundy: var(--brand-burgundy);
+  --posit-black: #151515;
+  --posit-white: var(--brand-white);
+
+  // Diagram semantic aliases
+  --ink: #151515;
+  --muted: #8a909c;
+  --line: #c9d1d9;
+  --safe: var(--posit-green);
+  --warn: var(--posit-orange);
+  --danger: var(--posit-burgundy);
+  --accent: var(--posit-blue);
+  --box-fill: #eef2f6;
+  --box-stroke: var(--posit-blue);
+
+  // ── Scene type scale ─────────────────────────────────────────────
+  // Every SVG <text> in the deck snaps to one of these seven steps
+  // (sole exception: the Beat 1 "ExtendedTask" hero label, deliberately 40px).
+  // CSS owns the message pair (caption + API line), axis labels, and
+  // the single-size classes below; per-element font-size attributes in
+  // index.qmd use the same steps so scenes read identically standalone.
+  --fs-micro: 13px;   // axis tags, tiny sub-notes
+  --fs-small: 15px;   // secondary labels: machine-sub, chip, relay
+  --fs-label: 18px;   // standard node + in-diagram mono labels
+  --fs-lead: 22px;    // primary node labels, OOM tag
+  --fs-title: 26px;   // scene headers (freeze label, Beat 4 machine)
+  --fs-hero: 34px;    // Beat 1 blocking/async headers
+  --fs-caption: 30px; // caption + API message pair
+}
+
+// The brand's monospace-block/inline settings emit literal bare-family rules
+// (`.reveal code` / `.reveal pre`) later in the compiled stylesheet than the
+// defaults above can reach; re-assert the chain here so a webfont failure
+// degrades to monospace, not the browser default serif.
+.reveal code,
+.reveal pre { font-family: $font-family-monospace; }
+
+// Body and headings: same idea — override the brand's bare-family CSS vars.
+.reveal {
+  --r-main-font: #{$font-family-sans-serif};
+  --r-heading-font: #{$font-family-sans-serif};
+}
+
+.reveal .slide-number { font-size: 0.35em; color: var(--muted); }
+.reveal .footer { font-size: 0.4em; color: var(--muted); }
+
+// ── Section marker ───────────────────────────────────────────────────
+// A five-bar rail + section name at bottom-left, so every slide says which
+// of the five sections it is in: 1 Amdahl · 2 mirai · 3 mori · 4 mizu ·
+// 5 Close. The title slide and cold open carry no data-state, so no marker;
+// the workloads demo rides on the Amdahl bar (it is the evidence for §1).
+//
+// Mechanism: each slide carries `data-state="sec-N"`, which reveal copies
+// onto <body> as a class while that slide is showing. The whole marker is
+// therefore CSS driven off `.sec-N` and never enters a slide's own layout:
+// nothing for auto-animate to match, and no cost against the scene cap
+// cap. Positioned `fixed` like `.reveal .footer`, in the same viewport
+// coordinates, so it holds still as slide content changes height.
+$rail-bar: 26px;                            // one bar
+$rail-gap: 6px;                             // gap between bars
+$rail-h: 5px;
+$rail-w: $rail-bar * 5 + $rail-gap * 4;     // 154px
+$rail-left: 24px;
+$section-names: "Amdahl", "mirai", "mori", "mizu", "Close";
+
+.reveal::before,
+.reveal::after {
+  position: fixed;
+  z-index: 2;
+  opacity: 0;              // no marker until a section state is active
+  pointer-events: none;
+}
+
+// The rail: a track of five bars, the active one filled in brand blue.
+.reveal::before {
+  content: "";
+  left: $rail-left;
+  bottom: 28px;
+  width: $rail-w;
+  height: $rail-h;
+  background-image:
+    linear-gradient(var(--accent), var(--accent)),
+    repeating-linear-gradient(to right, var(--line) 0 $rail-bar,
+      transparent $rail-bar ($rail-bar + $rail-gap));
+  background-size: $rail-bar $rail-h, $rail-w $rail-h;
+  background-repeat: no-repeat;
+  transition: background-position 0.35s ease;
+}
+
+// The name, on the footer's baseline just right of the rail.
+.reveal::after {
+  left: $rail-left + $rail-w + 14px;
+  bottom: 18px;
+  font-size: 17px;
+  color: var(--muted);
+}
+
+@for $i from 1 through 5 {
+  .sec-#{$i} {
+    .reveal::before {
+      opacity: 1;
+      background-position: ($rail-bar + $rail-gap) * ($i - 1) 0, 0 0;
+    }
+    .reveal::after {
+      opacity: 1;
+      content: "#{$i} · #{nth($section-names, $i)}";
+    }
+  }
+}
+
+// Close: every bar filled, and no name — the rail reads as complete.
+.sec-close .reveal::before {
+  opacity: 1;
+  background-image: repeating-linear-gradient(to right, var(--accent) 0 $rail-bar,
+    transparent $rail-bar ($rail-bar + $rail-gap));
+  background-size: $rail-w $rail-h;
+}
+
+// Track quarto's own footer/slide-number shrink on small viewports.
+@media screen and (max-width: 800px) {
+  .reveal::before { bottom: 21px; }
+  .reveal::after { bottom: 12px; font-size: 13px; }
+}
+
+// Sparse slides breathe
+.reveal .slide ul li,
+.reveal .slide ol li { margin-bottom: 0.55em; }
+.reveal .slide ul { list-style-type: none; margin-left: 0; }
+
+.reveal .muted { color: var(--muted); font-size: 0.75em; }
+.reveal .smaller { font-size: 0.7em; }
+
+// Compact data tables (workload table, results tables). Rows breathe:
+// the vertical padding spreads the table down the slide.
+.reveal .tbl table { font-size: 0.5em; }
+.reveal .tbl th,
+.reveal .tbl td { padding-block: 0.6em; }
+
+// Single large centred statement. Matches the brand's `headings`
+// typography class (Open Sans Light 300 — "all display/hero/headlines");
+// the brand has no 600 weight, and the fallback chain (Arial is the
+// approved office fallback) mirrors `.scene text` below so these never
+// drop to the browser's default serif when webfonts don't load.
+.reveal .statement {
+  font-family: $font-family-sans-serif;
+  font-size: 1em;
+  font-weight: 300;
+  color: var(--posit-blue);
+  text-align: center;
+  margin-top: 0.3em;
+}
+
+.reveal strong { color: var(--posit-blue); }
+.reveal .warn { color: var(--posit-orange); }
+.reveal .danger { color: var(--posit-burgundy); }
+
+// Title slide: quiet hierarchy
+#title-slide .title { font-size: 1.5em; margin-bottom: 0.2em; color: var(--posit-blue); }
+#title-slide .subtitle { color: var(--muted); font-size: 1.1em; font-weight: 300; margin-bottom: 1.2em; }
+#title-slide .quarto-title-author-name { font-size: 0.8em; }
+#title-slide .quarto-title-affiliation,
+#title-slide .institute { color: var(--muted); font-size: 0.6em; }
+
+// mirai + mori hex logos sit below the closing statement, over the toolbox
+// photo (the statement panel is ~860px wide, so there is no room to flank it)
+.reveal #close-install .hex-logo { position: absolute; z-index: 1; bottom: 13%;
+  height: 130px; width: auto; margin: 0;
+  border: none; box-shadow: none; background: none; }
+.reveal #close-install .hex-left { left: 50%;
+  transform: translateX(calc(-100% - 0.6em)); }
+.reveal #close-install .hex-right { right: 50%;
+  transform: translateX(calc(100% + 0.6em)); }
+
+// ── Hex logo walls ───────────────────────────────────────────────────
+// §2 "Already underneath" + "In curl too": the logos carry the slide,
+// with one short statement line above. Each item is a hex with a small
+// name caption and an optional sub/mono line (qualifier or API).
+.reveal .hex-wall { display: flex; justify-content: center; align-items: flex-end;
+  gap: 0.5em; flex-wrap: wrap; margin-top: 0.9em; }
+// flex: none + max-width/height: none are load-bearing: reveal's global
+// `img { max-width: 95%; max-height: 95% }` clamps against the shrink-wrapped
+// item and, with height set, distorts the sticker's aspect ratio.
+.reveal .hex-item { display: flex; flex-direction: column; align-items: center;
+  flex: none; }
+.reveal .hex-item img { height: 130px; width: auto; max-width: none; max-height: none;
+  margin: 0 0 0.25em; border: none; box-shadow: none; background: none; }
+.reveal .hex-name { font-size: 0.5em; font-weight: 600; line-height: 1.3; }
+.reveal .hex-mono { font-size: 0.34em; line-height: 1.3;
+  font-family: $font-family-monospace; color: var(--posit-burgundy); }
+
+// The mirai hex anchored beneath the wall — the backend everything above
+// rides on. A short connector drops from the wall's centre to the hex.
+.reveal .hex-anchor { display: flex; flex-direction: column; align-items: center; }
+.reveal .hex-anchor-line { width: 2px; height: 0.45em; background: var(--line);
+  margin-bottom: 0.35em; }
+.reveal .hex-anchor img { height: 120px; width: auto; max-width: none; max-height: none;
+  margin: 0 0 0.25em; border: none; box-shadow: none; background: none; }
+
+// ── Diagram / SVG scene styling ──────────────────────────────────────
+// The recurring visual vocabulary (users → host → dispatcher → daemons,
+// the queue bar doubling as the memory gauge). Auto-animate tweens matched data-id elements
+// across slides; these styles set the resting look + fragment fallbacks.
+.reveal .scene { margin: 0 auto; }
+// max-height keeps a scene + its title + a fragment line inside the 700px
+// deck height (reveal clips, it does not scale per slide). Uniform across every
+// scene slide: a per-slide cap would make auto-animate scale the whole picture
+// between states. 1000x530 viewBox letterboxes inside the box (Beat 2 uses
+// 560 — its diagram reaches y=440); the bottom units are air between the
+// diagram and its caption + API-line pair. 420px fills more of the slide now
+// that scene slides carry no prose beyond a one-line statement.
+.reveal .scene svg { width: 100%; height: auto; max-height: 420px; }
+// Exceptions: HTTP launcher · A's three-arm assembly is drawn on a taller
+// 560-unit viewBox; the 400px cap keeps title + scene + closing statement
+// inside the 700px deck height (460 overflowed by ~55px once the fragment
+// statement is visible).
+// Trade-off vs. the uniform-cap rule above: the HPC → cloud morph includes a
+// gentle uniform scale-up — accepted.
+.reveal .scene-tall .scene svg { max-height: 400px; }
+.reveal .scene text { font-family: $font-family-sans-serif; }
+
+.node { fill: var(--box-fill); stroke: var(--box-stroke); stroke-width: 2.5; }
+.node-label { fill: var(--ink); font-weight: 600; }
+.user-dot { fill: var(--posit-blue); }
+.flow { stroke: var(--posit-gray); stroke-width: 2.5; marker-end: url(#arrow); fill: none; }
+
+.queue-track { fill: #ffffff; stroke: var(--line); stroke-width: 2; }
+.queue-fill { fill: var(--posit-blue); transition: all 0.6s ease; }
+.cap-line { stroke: var(--posit-burgundy); stroke-width: 3.5; stroke-dasharray: 7 5; }
+.cap-label { fill: var(--posit-burgundy); font-weight: 600; }
+
+.freeze { fill: var(--posit-gray); transition: opacity 0.5s ease; }
+.freeze-label { fill: #ffffff; font-weight: 600; font-size: var(--fs-title); }
+.null-tag-box { fill: var(--posit-burgundy); }
+.null-tag-text { fill: #ffffff; font-weight: 700; font-family: $font-family-monospace; }
+
+// The scene message pair — caption takeaway + the mono API line below it —
+// set at the same size so the two read as one message, not diagram furniture.
+// Font-size lives here (CSS overrides the SVG font-size attributes) so every
+// scene stays in step; in-diagram mono labels keep their own smaller sizes.
+.reveal .scene .caption { fill: var(--ink); font-weight: 600; font-size: var(--fs-caption); }
+.reveal .scene text[data-id="apilbl"] { font-size: var(--fs-caption); }
+// diagram-mono is reserved for code tokens — the deck's inline-code burgundy
+// (--posit-burgundy = #9A4665 = $code-color). Mixed code+prose lines wrap the
+// prose in a <tspan style="fill: var(--posit-blue);">.
+.diagram-mono { font-family: $font-family-monospace; fill: var(--posit-burgundy); }
+
+// Machines — a physical host that daemons live on (laptop, server, cluster,
+// pod fleet). Daemons inside a machine are "chips": the same box, smaller.
+.machine { fill: #ffffff; stroke: var(--posit-gray); stroke-width: 2.5; }
+.machine-label { fill: var(--posit-gray); font-weight: 600; }
+.machine-sub { fill: var(--muted); }
+.chip { fill: var(--box-fill); stroke: var(--box-stroke); stroke-width: 2; }
+.chip-label { fill: var(--ink); }
+
+// Relays: the thing that spawns daemons on your behalf (scheduler, REST API),
+// and the launcher that replaces a dead daemon.
+.relay { fill: #ffffff; stroke: var(--posit-teal); stroke-width: 2.5; }
+.relay-label { fill: var(--posit-teal); font-weight: 600; }
+
+// Failure states. `class="node dead"` — declared after .node to win.
+.dead { fill: #f2f2f3; stroke: var(--danger); stroke-dasharray: 8 6; }
+.dead-label { fill: var(--muted); }
+.oom-box { fill: var(--danger); }
+.oom-text { fill: #ffffff; font-weight: 700; letter-spacing: 0.06em;
+  font-size: var(--fs-lead); }
+
+// Per-daemon queues (Beat 3, once dispatcher is switched off)
+.dq-track { fill: #ffffff; stroke: var(--line); stroke-width: 1.5; }
+.dq-fill { fill: var(--posit-blue); transition: all 0.6s ease; }
+
+// Queued payloads (Beat 5): fat 200 MB blocks → slim 200 B references
+.payload { fill: var(--posit-blue); transition: all 0.6s ease; }
+.payload-label { fill: var(--posit-blue); font-weight: 600; }
+
+// The shared data plane: one physical copy per machine
+.plane { fill: rgba(65, 149, 153, 0.1); stroke: var(--posit-teal); stroke-width: 2.5; }
+.plane-label { fill: var(--posit-teal); font-weight: 600; }
+
+// Close assembly: the two takeaways as dotted brand-red highlight boxes with
+// matching red labels. The boxes sit right after <defs> in the SVG so they
+// paint under the diagram — flows read as entering/leaving the regions.
+.axis-box { fill: none; stroke: var(--danger); stroke-width: 3.5;
+  stroke-dasharray: 1 8; stroke-linecap: round; }
+.axis-label { fill: var(--danger); font-weight: 600; letter-spacing: 0.04em;
+  font-size: var(--fs-label); }
+
+// On the fragment step each box pops in from slightly smaller — the memory
+// model first, reach a beat behind, each label with its box.
+.reveal .fragment .axis-box,
+.reveal .fragment .axis-label { opacity: 0; transition: opacity 0.45s ease; }
+.reveal .fragment .axis-box {
+  transform: scale(0.92);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+.reveal .fragment.visible .axis-box,
+.reveal .fragment.visible .axis-label { opacity: 1; }
+.reveal .fragment.visible .axis-box { transform: scale(1); }
+.reveal .fragment.visible [data-id="axis1"],
+.reveal .fragment.visible [data-id="axis1l"] { transition-delay: 0.4s; }
+
+// One-line provenance for a number shown in a scene (Beat 5 benchmark)
+.reveal .receipt { color: var(--muted); font-size: 0.5em; text-align: center;
+  margin-top: 0.15em; }
+
+// ── Chart-led slides ───────────────────────────────────────────────
+// `.fig-focus` on a slide built around a single ggplot figure: the chart
+// is the message, the prose its caption. Paragraphs drop to caption
+// size and centre under the chart; the automatic "Figure N" label is
+// hidden, so the r-stretch chart takes the vertical space they free up.
+// (The chart's own pixel size comes from the chunk's
+// fig-width/fig-height/fig-dpi, tuned alongside.)
+// Direct children only, so a .receipt's inner <p> keeps its own size.
+.reveal .fig-focus > p {
+  font-size: 0.62em;
+  line-height: 1.35;
+  margin-block: 0.4em;
+  text-align: center;
+}
+
+// Display math stays a step larger — on Amdahl's law the equation is
+// content, not caption.
+.reveal .fig-focus > p:has(.math.display) { font-size: 0.85em; }
+
+// Amdahl slide: once the law is spoken the equation is context, not content —
+// a step back down (0.7em) frees vertical room for a taller sweep figure.
+.reveal .amdahl > p:has(.math.display) { font-size: 0.7em; }
+
+// The auto "Figure N" label spends slide space on nothing.
+.reveal .fig-focus > p.caption { display: none; }
+
+// ── Code-hero slide ──────────────────────────────────────────────
+// The §2 makeCluster beat: the two-line code block is the message, so
+// the prose drops to the deck's caption size (matching .fig-focus)
+// while the code stays at the deck's normal size — the code counterpart
+// to .fig-focus. The footnote takes the receipt size, so the size
+// hierarchy still reads.
+.reveal .code-hero p,
+.reveal .code-hero li { font-size: 0.62em; line-height: 1.35; margin-block: 0.4em; }
+.reveal .code-hero .muted { font-size: 0.5em; }
+
+// ── Full-slide photo slides ──────────────────────────────────────────
+// Unsplash cold-open brake shot, disco ball, Beat 5 library. The photo
+// is a reveal `background-image` on the slide, so it fills the whole
+// viewport (backgrounds live behind the scaled slide box and ignore its
+// letterboxing); the message is inset over it: title at the top (on a
+// text shadow, or itself a panel fragment on the library slide),
+// statement on a translucent dark panel in the lower third, credit
+// tucked bottom-right above the slide number. height:100% makes
+// the section fill the slide box (reveal's vertical centering then
+// no-ops to top: 0) so the absolute-positioned panel and credit pin to
+// the slide box, not the content height.
+.reveal .slides section.photo-full { height: 100%; }
+
+.reveal .photo-full h1, .reveal .photo-full h2 { position: relative;
+  z-index: 1; color: #ffffff; margin-top: 0.5em;
+  text-shadow: 0 2px 22px rgba(0, 0, 0, 0.65), 0 1px 4px rgba(0, 0, 0, 0.5); }
+.reveal .photo-full h1 code { color: #ffffff; }
+// Inline code inside a dark statement panel: brand burgundy won't read on it
+.reveal .photo-full .statement code { color: #ffffff; }
+
+// The inset message panel, lower third
+.reveal .photo-full .fragment { position: absolute; z-index: 1; left: 0;
+  right: 0; bottom: 14%; text-align: center; }
+// A fragment can take the top slot instead (library slide's title panel)
+.reveal .photo-full .fragment.inset-top { top: 5%; bottom: auto; }
+// The final install slide's statement sits dead centre over the toolbox photo,
+// wide enough that the install.packages() line never wraps
+.reveal #close-install .statement { position: absolute; z-index: 1; left: 50%;
+  top: 50%; transform: translate(-50%, -50%); margin: 0;
+  width: max-content; max-width: 90%; }
+.reveal .photo-full .statement,
+.reveal .photo-full .inset-title { display: inline-block; color: #ffffff;
+  background: rgba(21, 21, 21, 0.55); backdrop-filter: blur(8px);
+  padding: 0.45em 1.1em; border-radius: 12px; margin-top: 0; }
+// The inset title is a panel, so it needs no text shadow
+.reveal .photo-full h1.inset-title { margin: 0; text-shadow: none; }
+
+.reveal .photo-full .photo-credit { position: absolute; z-index: 1;
+  right: 16px; bottom: 30px; margin: 0; font-size: 0.32em;
+  color: rgba(255, 255, 255, 0.8); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); }
+.reveal .photo-full .photo-credit a { color: rgba(255, 255, 255, 0.8); }
+
+// The toolbox slide lays its assembly diagram over the photo: the scene
+// keeps its light fills and dark ink, so it rides on a translucent light
+// panel — the inverse of the dark statement panels on the other slides.
+.reveal .photo-full .scene { position: relative; z-index: 1;
+  background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px);
+  border-radius: 14px; padding: 0.3em 0.5em; }
