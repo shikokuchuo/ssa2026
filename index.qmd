@@ -117,6 +117,12 @@ execute:
 #      mentions left in notes (the §2 and §4 plan lines, the new-map
 #      note) follow.
 # (20) The cold open's "two times" becomes "2x".
+# (21) The cold open's code slide (`daemons()` + `mirai_map()`) moves
+#      after the four-workloads table — the demo call lands once the
+#      workloads it maps over are on the table. Order only; count
+#      unchanged (42 + title).
+# (22) The moved code slide is retagged to its new section: sec-2 →
+#      sec-1 state, menu title "2 · code" → "The workloads · code".
 ---
 
 ```{r}
@@ -261,17 +267,6 @@ plot_speedup("boot_metrics")
 Early results · 12 workers, 14-core M4 Pro · R 4.6.1 · sequential `lapply()` baseline = 1× · both runtimes' outputs match the sequential run
 :::
 
-## `daemons()` + `mirai_map()` {data-menu-title="2 · code" data-state="sec-2"}
-
-```r
-library(mirai)
-daemons(12)
-
-res <- mirai_map(splits, function(split) {
-  # fit, score, return a tibble
-})[]
-```
-
 # The evidence: four workloads {data-menu-title="The workloads" data-state="sec-1"}
 
 ::: {.statement}
@@ -304,6 +299,17 @@ tibble(
   knitr::kable()
 ```
 :::
+
+## `daemons()` + `mirai_map()` {data-menu-title="The workloads · code" data-state="sec-1"}
+
+```r
+library(mirai)
+daemons(12)
+
+res <- mirai_map(splits, function(split) {
+  # fit, score, return a tibble
+})[]
+```
 
 ## A — Overhead-bound: thousands of tiny tasks {.smaller data-state="sec-1"}
 

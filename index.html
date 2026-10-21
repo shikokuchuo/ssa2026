@@ -241,15 +241,6 @@ Figure&nbsp;1
 </p><div class="receipt">
 <p>Early results · 12 workers, 14-core M4 Pro · R 4.6.1 · sequential <code>lapply()</code> baseline = 1× · both runtimes’ outputs match the sequential run</p>
 </div>
-</section>
-<section id="daemons-mirai_map" class="slide level2 center" data-menu-title="2 · code" data-state="sec-2">
-<h2><code>daemons()</code> + <code>mirai_map()</code></h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode numberSource r number-lines"><code class="sourceCode r"><span id="cb1-1"><a href="" aria-label="1"></a><span class="fu">library</span>(mirai)</span>
-<span id="cb1-2"><a href="" aria-label="2"></a><span class="fu">daemons</span>(<span class="dv">12</span>)</span>
-<span id="cb1-3"><a href="" aria-label="3"></a></span>
-<span id="cb1-4"><a href="" aria-label="4"></a>res <span class="ot">&lt;-</span> <span class="fu">mirai_map</span>(splits, <span class="cf">function</span>(split) {</span>
-<span id="cb1-5"><a href="" aria-label="5"></a>  <span class="co"># fit, score, return a tibble</span></span>
-<span id="cb1-6"><a href="" aria-label="6"></a>})[]</span></code></pre></div>
 </section></section>
 <section>
 <section id="the-evidence-four-workloads" class="title-slide slide level1 center" data-menu-title="The workloads" data-state="sec-1">
@@ -329,6 +320,15 @@ Table&nbsp;1
 </div>
 </div>
 </div>
+</section>
+<section id="daemons-mirai_map" class="slide level2 center" data-menu-title="The workloads · code" data-state="sec-1">
+<h2><code>daemons()</code> + <code>mirai_map()</code></h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode numberSource r number-lines"><code class="sourceCode r"><span id="cb1-1"><a href="" aria-label="1"></a><span class="fu">library</span>(mirai)</span>
+<span id="cb1-2"><a href="" aria-label="2"></a><span class="fu">daemons</span>(<span class="dv">12</span>)</span>
+<span id="cb1-3"><a href="" aria-label="3"></a></span>
+<span id="cb1-4"><a href="" aria-label="4"></a>res <span class="ot">&lt;-</span> <span class="fu">mirai_map</span>(splits, <span class="cf">function</span>(split) {</span>
+<span id="cb1-5"><a href="" aria-label="5"></a>  <span class="co"># fit, score, return a tibble</span></span>
+<span id="cb1-6"><a href="" aria-label="6"></a>})[]</span></code></pre></div>
 </section>
 <section id="a-overhead-bound-thousands-of-tiny-tasks" class="slide level2 smaller center" data-state="sec-1">
 <h2>A — Overhead-bound: thousands of tiny tasks</h2>
